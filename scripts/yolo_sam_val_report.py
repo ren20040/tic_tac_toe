@@ -820,46 +820,56 @@ def draw_state_compare(
     conservative: Optional[BoardState],
     path: Path,
 ):
-    """Save a compact 3x3 state comparison panel."""
-    cell = 170
-    margin = 24
-    title_h = 52
-    width = cell * 3 + margin * 2
-    height = title_h + cell * 3 + margin
+    """Save a readable 3x3 state comparison panel."""
+    cell_w = 275
+    cell_h = 150
+    margin = 36
+    title_h = 78
+    width = cell_w * 3 + margin * 2
+    height = title_h + cell_h * 3 + margin
     canvas = np.full((height, width, 3), 255, dtype=np.uint8)
-    cv2.putText(canvas, "GT / YOLO / YOLO+SAM / VLM / Conservative", (margin, 34), cv2.FONT_HERSHEY_SIMPLEX, 0.62, (0, 0, 0), 2)
+    cv2.putText(canvas, "Board State Comparison", (margin, 34), cv2.FONT_HERSHEY_SIMPLEX, 0.82, (0, 0, 0), 2)
+    cv2.putText(
+        canvas,
+        "GT=label, Y=YOLO, YS=YOLO+SAM, V=Qwen-VLM, F=final",
+        (margin, 62),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.48,
+        (80, 80, 80),
+        1,
+    )
 
     for row in range(3):
         for col in range(3):
             idx = row * 3 + col
-            x1 = margin + col * cell
-            y1 = title_h + row * cell
-            x2 = x1 + cell
-            y2 = y1 + cell
+            x1 = margin + col * cell_w
+            y1 = title_h + row * cell_h
+            x2 = x1 + cell_w
+            y2 = y1 + cell_h
             gt_v = gt[idx] if gt is not None else -1
             yolo_v = yolo[idx] if yolo is not None else -1
             fusion_v = fusion[idx] if fusion is not None else -1
             vlm_v = vlm[idx] if vlm is not None else -1
             conservative_v = conservative[idx] if conservative is not None else -1
             ok = gt_v == conservative_v
-            bg = (225, 255, 225) if ok else (225, 225, 255)
+            bg = (234, 250, 235) if ok else (235, 238, 255)
             cv2.rectangle(canvas, (x1, y1), (x2, y2), bg, -1)
-            cv2.rectangle(canvas, (x1, y1), (x2, y2), (80, 80, 80), 1)
+            cv2.rectangle(canvas, (x1, y1), (x2, y2), (90, 90, 90), 1)
             lines = [
                 f"cell {idx}",
                 f"GT: {STATE_SHORT.get(gt_v, '?')}",
-                f"Y:  {STATE_SHORT.get(yolo_v, '?')}",
+                f"Y: {STATE_SHORT.get(yolo_v, '?')}",
                 f"YS: {STATE_SHORT.get(fusion_v, '?')}",
-                f"V:  {STATE_SHORT.get(vlm_v, '?')}",
-                f"C:  {STATE_SHORT.get(conservative_v, '?')}",
+                f"V: {STATE_SHORT.get(vlm_v, '?')}",
+                f"F: {STATE_SHORT.get(conservative_v, '?')}",
             ]
             for line_i, text in enumerate(lines):
                 cv2.putText(
                     canvas,
                     text,
-                    (x1 + 15, y1 + 24 + line_i * 23),
+                    (x1 + 20, y1 + 28 + line_i * 20),
                     cv2.FONT_HERSHEY_SIMPLEX,
-                    0.55,
+                    0.52,
                     (0, 0, 0),
                     2 if line_i == 0 else 1,
                 )
@@ -867,21 +877,21 @@ def draw_state_compare(
 
 
 def draw_confusion_matrix(matrix: np.ndarray, title: str, path: Path):
-    """Save a 3x3 confusion matrix image."""
-    cell = 120
-    margin_left = 115
-    margin_top = 90
-    width = margin_left + cell * 3 + 40
-    height = margin_top + cell * 3 + 70
+    """Save a readable 3x3 confusion matrix image."""
+    cell = 145
+    margin_left = 150
+    margin_top = 115
+    width = margin_left + cell * 3 + 70
+    height = margin_top + cell * 3 + 90
     canvas = np.full((height, width, 3), 255, dtype=np.uint8)
-    cv2.putText(canvas, title, (30, 36), cv2.FONT_HERSHEY_SIMPLEX, 0.85, (0, 0, 0), 2)
-    cv2.putText(canvas, "Pred", (margin_left + 100, 68), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 0), 2)
-    cv2.putText(canvas, "GT", (25, margin_top + 170), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 0), 2)
+    cv2.putText(canvas, title, (35, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.78, (0, 0, 0), 2)
+    cv2.putText(canvas, "Predicted class", (margin_left + 90, 78), cv2.FONT_HERSHEY_SIMPLEX, 0.58, (70, 70, 70), 1)
+    cv2.putText(canvas, "GT", (35, margin_top + 222), cv2.FONT_HERSHEY_SIMPLEX, 0.62, (70, 70, 70), 2)
     max_value = max(1, int(matrix.max()))
 
     for i in range(3):
-        cv2.putText(canvas, STATE_NAMES[i], (margin_left + i * cell + 18, margin_top - 16), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
-        cv2.putText(canvas, STATE_NAMES[i], (20, margin_top + i * cell + 68), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+        cv2.putText(canvas, STATE_NAMES[i], (margin_left + i * cell + 24, margin_top - 18), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (0, 0, 0), 1)
+        cv2.putText(canvas, STATE_NAMES[i], (58, margin_top + i * cell + 78), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (0, 0, 0), 1)
         for j in range(3):
             value = int(matrix[i, j])
             intensity = int(255 - 170 * (value / max_value))
@@ -890,52 +900,313 @@ def draw_confusion_matrix(matrix: np.ndarray, title: str, path: Path):
             y1 = margin_top + i * cell
             cv2.rectangle(canvas, (x1, y1), (x1 + cell, y1 + cell), color, -1)
             cv2.rectangle(canvas, (x1, y1), (x1 + cell, y1 + cell), (80, 80, 80), 1)
-            cv2.putText(canvas, str(value), (x1 + 42, y1 + 68), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
+            text = str(value)
+            size, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.85, 2)
+            cv2.putText(canvas, text, (x1 + (cell - size[0]) // 2, y1 + 82), cv2.FONT_HERSHEY_SIMPLEX, 0.85, (0, 0, 0), 2)
     cv2.imwrite(str(path), canvas)
 
 
-def draw_metrics_summary(summary: Dict[str, Any], path: Path):
-    """Save a bar-style metric summary image."""
-    paper = summary.get("paper_metrics", {})
-    metrics = [
-        ("Paper board-state acc", paper.get("board_state_accuracy", summary["final_exact_match_rate"])),
-        ("Paper cell classification acc", paper.get("cell_classification_accuracy", summary["final_cell_accuracy"])),
-        ("Paper grid-assignment acc", paper.get("grid_assignment_accuracy", 0.0)),
-        ("Paper illegal-state intercept", paper.get("illegal_state_interception_rate", 0.0) or 0.0),
-        ("Paper low-conf sample rate", paper.get("low_confidence_sample_recognition_rate", 0.0)),
-        ("Paper mask fallback rate", paper.get("mask_fallback_rate", 0.0)),
-        ("YOLO cell acc", summary["yolo_cell_accuracy"]),
-        ("YOLO+SAM raw cell acc", summary["fusion_cell_accuracy"]),
-        ("VLM raw cell acc", summary["vlm_cell_accuracy"]),
-        ("YOLO+SAM+Qwen-VLM final cell acc", summary["conservative_cell_accuracy"]),
-        ("YOLO exact", summary["yolo_exact_match_rate"]),
-        ("YOLO+SAM+Qwen-VLM final exact", summary["conservative_exact_match_rate"]),
-    ]
-    width = 860
-    height = 95 + len(metrics) * 70
+def fit_text_to_width(
+    text: str,
+    max_width: int,
+    scale: float,
+    thickness: int,
+    font: int = cv2.FONT_HERSHEY_SIMPLEX,
+) -> str:
+    """Shorten text with an ellipsis until it fits inside max_width."""
+    if cv2.getTextSize(text, font, scale, thickness)[0][0] <= max_width:
+        return text
+    suffix = "..."
+    for end in range(len(text), 0, -1):
+        candidate = text[:end].rstrip() + suffix
+        if cv2.getTextSize(candidate, font, scale, thickness)[0][0] <= max_width:
+            return candidate
+    return suffix
+
+
+def as_float(value: Any, default: float = 0.0) -> float:
+    """Convert metric values to float with a safe fallback."""
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def clamp_metric(value: Any, min_value: float = 0.0, max_value: float = 1.0) -> float:
+    """Clamp a numeric metric to the expected plotting range."""
+    return max(min_value, min(max_value, as_float(value, min_value)))
+
+
+def method_color(name: str) -> Tuple[int, int, int]:
+    """Return a stable BGR color for a method name."""
+    if "Final" in name or "YOLO+SAM+VLM" in name:
+        return (0, 120, 255)
+    if "VLM" in name:
+        return (145, 80, 220)
+    if "SAM" in name:
+        return (0, 170, 90)
+    if "YOLO" in name:
+        return (120, 120, 120)
+    if "fallback" in name.lower():
+        return (60, 90, 220)
+    return (30, 120, 220)
+
+
+def draw_bar_metric_figure(
+    title: str,
+    items: List[Tuple[str, float]],
+    path: Path,
+    *,
+    x_max: Optional[float] = 1.0,
+    subtitle: str = "",
+    value_fmt: str = "{:.3f}",
+):
+    """Draw one horizontal bar figure for a single metric family."""
+    if not items:
+        return
+
+    values = [max(0.0, as_float(value)) for _, value in items]
+    if x_max is None:
+        x_max_value = max(values) if values else 1.0
+        x_max = max(1.0, x_max_value * 1.18)
+    x_max = max(1e-6, float(x_max))
+
+    width = 1200
+    row_h = 54
+    top = 108
+    bottom = 42
+    height = top + len(items) * row_h + bottom
     canvas = np.full((height, width, 3), 255, dtype=np.uint8)
-    cv2.putText(canvas, "Validation Metrics Summary", (30, 42), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 0), 2)
-    x0 = 260
-    bar_w = 500
-    for idx, (name, value) in enumerate(metrics):
-        y = 90 + idx * 70
-        cv2.putText(canvas, name, (30, y + 24), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 0), 2)
-        cv2.rectangle(canvas, (x0, y), (x0 + bar_w, y + 30), (230, 230, 230), -1)
-        if "Paper" in name:
-            color = (30, 120, 220)
-        elif "Oracle" in name:
-            color = (180, 0, 255)
-        elif "final" in name:
-            color = (0, 120, 255)
-        elif "VLM" in name:
-            color = (0, 120, 255)
-        elif "SAM" in name:
-            color = (0, 180, 0)
-        else:
-            color = (120, 120, 120)
-        cv2.rectangle(canvas, (x0, y), (x0 + int(bar_w * value), y + 30), color, -1)
-        cv2.putText(canvas, f"{value:.3f}", (x0 + bar_w + 20, y + 24), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 0, 0), 2)
+    cv2.putText(canvas, title, (42, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
+    if subtitle:
+        cv2.putText(canvas, subtitle, (42, 74), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (80, 80, 80), 1)
+
+    label_x = 42
+    label_w = 340
+    bar_x = 410
+    bar_w = 640
+    value_x = 1085
+    bar_h = 24
+
+    ticks = [0.0, 0.25, 0.5, 0.75, 1.0] if x_max <= 1.01 else [0.0, 0.25 * x_max, 0.5 * x_max, 0.75 * x_max, x_max]
+    for tick in ticks:
+        x = bar_x + int(bar_w * (tick / x_max))
+        cv2.line(canvas, (x, top - 14), (x, height - bottom + 6), (235, 235, 235), 1)
+        tick_text = f"{tick:.2f}" if x_max <= 1.01 else f"{tick:.1f}"
+        cv2.putText(canvas, tick_text, (x - 22, top - 24), cv2.FONT_HERSHEY_SIMPLEX, 0.38, (120, 120, 120), 1)
+
+    for idx, (name, value) in enumerate(items):
+        value = max(0.0, as_float(value))
+        y = top + idx * row_h
+        if idx % 2 == 0:
+            cv2.rectangle(canvas, (30, y - 10), (width - 30, y + row_h - 12), (248, 248, 248), -1)
+        label = fit_text_to_width(name, label_w, 0.52, 1)
+        cv2.putText(canvas, label, (label_x, y + 18), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (20, 20, 20), 1)
+        cv2.rectangle(canvas, (bar_x, y), (bar_x + bar_w, y + bar_h), (228, 228, 228), -1)
+        cv2.rectangle(
+            canvas,
+            (bar_x, y),
+            (bar_x + int(bar_w * min(value / x_max, 1.0)), y + bar_h),
+            method_color(name),
+            -1,
+        )
+        cv2.putText(canvas, value_fmt.format(value), (value_x, y + 19), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (0, 0, 0), 1)
     cv2.imwrite(str(path), canvas)
+
+
+def draw_line_metric_figure(
+    title: str,
+    series: List[Tuple[str, List[float], Tuple[int, int, int]]],
+    path: Path,
+    *,
+    y_max: Optional[float] = 1.0,
+    subtitle: str = "",
+):
+    """Draw a line chart for per-image metric trends."""
+    series = [(name, values, color) for name, values, color in series if values]
+    if not series:
+        return
+
+    n = max(len(values) for _, values, _ in series)
+    all_values = [as_float(value) for _, values, _ in series for value in values]
+    if y_max is None:
+        y_max = max(1.0, max(all_values) * 1.18 if all_values else 1.0)
+    y_min = 0.0
+    y_max = max(y_max, 1e-6)
+
+    width = 1280
+    height = 680
+    left = 95
+    right = 50
+    top = 110
+    bottom = 86
+    plot_w = width - left - right
+    plot_h = height - top - bottom
+    canvas = np.full((height, width, 3), 255, dtype=np.uint8)
+    cv2.putText(canvas, title, (42, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 0), 2)
+    if subtitle:
+        cv2.putText(canvas, subtitle, (42, 74), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (80, 80, 80), 1)
+
+    cv2.rectangle(canvas, (left, top), (left + plot_w, top + plot_h), (60, 60, 60), 1)
+    for tick in (0.0, 0.25, 0.5, 0.75, 1.0):
+        value = y_min + (y_max - y_min) * tick
+        y = top + plot_h - int(plot_h * tick)
+        cv2.line(canvas, (left, y), (left + plot_w, y), (232, 232, 232), 1)
+        label = f"{value:.2f}" if y_max <= 1.01 else f"{value:.1f}"
+        cv2.putText(canvas, label, (35, y + 5), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (90, 90, 90), 1)
+
+    if n > 1:
+        tick_positions = sorted(set([0, n // 4, n // 2, (3 * n) // 4, n - 1]))
+    else:
+        tick_positions = [0]
+    for idx in tick_positions:
+        x = left + int(plot_w * (idx / max(1, n - 1)))
+        cv2.line(canvas, (x, top + plot_h), (x, top + plot_h + 8), (80, 80, 80), 1)
+        cv2.putText(canvas, str(idx + 1), (x - 8, top + plot_h + 28), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (90, 90, 90), 1)
+
+    for name, values, color in series:
+        points = []
+        for idx, value in enumerate(values):
+            value = max(y_min, min(y_max, as_float(value)))
+            x = left + int(plot_w * (idx / max(1, n - 1)))
+            y = top + plot_h - int(plot_h * ((value - y_min) / (y_max - y_min)))
+            points.append((x, y))
+        if len(points) >= 2:
+            cv2.polylines(canvas, [np.array(points, dtype=np.int32)], False, color, 2)
+        for point in points:
+            cv2.circle(canvas, point, 3, color, -1)
+
+    legend_x = left
+    legend_y = height - 34
+    for name, _, color in series:
+        cv2.rectangle(canvas, (legend_x, legend_y - 10), (legend_x + 18, legend_y + 4), color, -1)
+        cv2.putText(canvas, name, (legend_x + 26, legend_y + 4), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (40, 40, 40), 1)
+        legend_x += 210
+
+    cv2.imwrite(str(path), canvas)
+
+
+def draw_metric_figures(summary: Dict[str, Any], rows: List[Dict[str, Any]], figures_out: Path) -> Dict[str, str]:
+    """Draw separate paper-friendly figures for each metric family."""
+    paper = summary.get("paper_metrics", {})
+    figure_paths: Dict[str, str] = {}
+
+    def save_bar(name: str, title: str, items: List[Tuple[str, float]], **kwargs):
+        path = figures_out / f"{name}.jpg"
+        draw_bar_metric_figure(title, items, path, **kwargs)
+        figure_paths[name] = str(path)
+
+    def save_line(name: str, title: str, series: List[Tuple[str, List[float], Tuple[int, int, int]]], **kwargs):
+        path = figures_out / f"{name}.jpg"
+        draw_line_metric_figure(title, series, path, **kwargs)
+        figure_paths[name] = str(path)
+
+    save_bar(
+        "cell_accuracy_by_method",
+        "Cell Classification Accuracy",
+        [
+            ("YOLO", summary["yolo_cell_accuracy"]),
+            ("YOLO+SAM raw", summary["fusion_cell_accuracy"]),
+            ("Qwen-VLM raw", summary["vlm_cell_accuracy"]),
+            ("Final", summary["final_cell_accuracy"]),
+            ("Oracle upper bound", summary["oracle_cell_accuracy"]),
+        ],
+        subtitle="Higher is better. Computed over 9 cells per image.",
+    )
+    save_bar(
+        "board_accuracy_by_method",
+        "Board-State Exact Match Accuracy",
+        [
+            ("YOLO", summary["yolo_exact_match_rate"]),
+            ("YOLO+SAM raw", summary["fusion_exact_match_rate"]),
+            ("Qwen-VLM raw", summary["vlm_exact_match_rate"]),
+            ("Final", summary["final_exact_match_rate"]),
+            ("Oracle upper bound", summary["oracle_exact_match_rate"]),
+        ],
+        subtitle="Higher is better. One board is correct only when all 9 cells match.",
+    )
+    save_bar(
+        "occupied_accuracy_by_method",
+        "Occupied/Empty Accuracy",
+        [
+            ("YOLO", summary["yolo_occupied_accuracy"]),
+            ("YOLO+SAM raw", summary["fusion_occupied_accuracy"]),
+            ("Qwen-VLM raw", summary["vlm_occupied_accuracy"]),
+            ("Final", summary["final_occupied_accuracy"]),
+            ("Oracle upper bound", summary["oracle_occupied_accuracy"]),
+        ],
+        subtitle="Higher is better. Piece color is ignored; only occupied vs empty is evaluated.",
+    )
+    save_bar(
+        "grid_assignment_accuracy_by_method",
+        "Grid Assignment Accuracy",
+        [
+            ("YOLO", summary["yolo_grid_assignment_accuracy"]),
+            ("YOLO+SAM raw", summary["fusion_grid_assignment_accuracy"]),
+            ("Final", summary["final_grid_assignment_accuracy"]),
+        ],
+        subtitle="Higher is better. Measures whether detected pieces are assigned to the correct grid cell.",
+    )
+    save_bar(
+        "rule_safety_metrics",
+        "Rule and Low-Confidence Handling Metrics",
+        [
+            ("Illegal-state interception", paper.get("illegal_state_interception_rate", 0.0) or 0.0),
+            ("Final legal-state rate", paper.get("final_legal_state_rate", 0.0)),
+            ("Low-confidence recognition", paper.get("low_confidence_sample_recognition_rate", 0.0)),
+        ],
+        subtitle="Rule-oriented metrics used by the conservative arbitration strategy.",
+    )
+    total_masks = max(1, int(summary.get("total_masks", 0)))
+    save_bar(
+        "mask_quality",
+        "Mask Quality and Fallback Ratio",
+        [
+            ("SAM mask ratio", int(summary.get("total_sam_masks", 0)) / total_masks),
+            ("Fallback mask ratio", paper.get("mask_fallback_rate", 0.0)),
+        ],
+        subtitle=f"Total masks={summary.get('total_masks', 0)}, fallback={summary.get('total_fallback_masks', 0)}.",
+    )
+    save_bar(
+        "mask_count_distribution",
+        "Mask Count Distribution",
+        [
+            ("SAM masks", int(summary.get("total_sam_masks", 0))),
+            ("Fallback masks", int(summary.get("total_fallback_masks", 0))),
+        ],
+        x_max=None,
+        subtitle="Absolute mask counts across the validation split.",
+        value_fmt="{:.0f}",
+    )
+
+    save_line(
+        "per_image_cell_accuracy_trend",
+        "Per-Image Cell Accuracy Trend",
+        [
+            ("YOLO", [as_float(row["yolo_cell_accuracy"]) for row in rows], (120, 120, 120)),
+            ("YOLO+SAM", [as_float(row["fusion_cell_accuracy"]) for row in rows], (0, 170, 90)),
+            ("Qwen-VLM", [as_float(row["vlm_cell_accuracy"]) for row in rows], (145, 80, 220)),
+            ("Final", [as_float(row["final_cell_accuracy"]) for row in rows], (0, 120, 255)),
+        ],
+        subtitle="Each point represents one validation image.",
+    )
+    save_line(
+        "inference_time_per_image",
+        "Per-Image Inference Time",
+        [("Inference time", [as_float(row["paper_inference_time_sec"]) for row in rows], (0, 120, 255))],
+        y_max=None,
+        subtitle="Seconds per image for the full perception pipeline.",
+    )
+    save_line(
+        "mask_fallback_rate_per_image",
+        "Per-Image Mask Fallback Rate",
+        [("Fallback rate", [as_float(row["paper_mask_fallback_rate"]) for row in rows], (60, 90, 220))],
+        subtitle="Fallback mask ratio for each validation image.",
+    )
+
+    return figure_paths
 
 
 def mean(values: List[float]) -> float:
@@ -964,9 +1235,11 @@ def main():
     frontend_out = out_dir / "frontend_outputs"
     report_images_out = out_dir / "report_images"
     figures_out = out_dir / "figures"
+    confusion_out = figures_out / "confusion"
     frontend_out.mkdir(parents=True, exist_ok=True)
     report_images_out.mkdir(parents=True, exist_ok=True)
     figures_out.mkdir(parents=True, exist_ok=True)
+    confusion_out.mkdir(parents=True, exist_ok=True)
     vlm_settings = load_vlm_settings(args.config, args)
 
     frontend = YoloSAMPerceptionFrontend(args.config)
@@ -1285,6 +1558,7 @@ def main():
         "frontend_outputs_dir": str(frontend_out),
         "report_images_dir": str(report_images_out),
         "figures_dir": str(figures_out),
+        "confusion_dir": str(confusion_out),
         "vlm_enabled": vlm is not None,
         "vlm_model": vlm_settings["model"],
         "vlm_model_path": vlm_settings["model_path"],
@@ -1344,21 +1618,30 @@ def main():
         summary["final_occupied_accuracy"] - summary["yolo_occupied_accuracy"]
     )
 
+    figure_paths = draw_metric_figures(summary, rows, figures_out)
+    confusion_paths = {
+        "confusion_yolo_only": str(confusion_out / "confusion_yolo_only.jpg"),
+        "confusion_yolo_sam_raw": str(confusion_out / "confusion_yolo_sam_raw.jpg"),
+        "confusion_vlm_raw": str(confusion_out / "confusion_vlm_raw.jpg"),
+        "confusion_yolo_sam_vlm_final": str(confusion_out / "confusion_yolo_sam_vlm_final.jpg"),
+        "confusion_oracle_upper_bound": str(confusion_out / "confusion_oracle_upper_bound.jpg"),
+    }
+    draw_confusion_matrix(yolo_confusion, "YOLO-only Confusion Matrix", Path(confusion_paths["confusion_yolo_only"]))
+    draw_confusion_matrix(fusion_confusion, "YOLO+SAM Raw Confusion Matrix", Path(confusion_paths["confusion_yolo_sam_raw"]))
+    draw_confusion_matrix(vlm_raw_confusion, "Qwen-VLM Raw Confusion Matrix", Path(confusion_paths["confusion_vlm_raw"]))
+    draw_confusion_matrix(final_confusion, "YOLO+SAM+Qwen-VLM Final Confusion Matrix", Path(confusion_paths["confusion_yolo_sam_vlm_final"]))
+    draw_confusion_matrix(oracle_confusion, "Oracle Upper Bound Confusion Matrix", Path(confusion_paths["confusion_oracle_upper_bound"]))
+    summary["figure_paths"] = {**figure_paths, **confusion_paths}
+
     write_csv(out_dir / "summary.csv", rows)
     with open(out_dir / "summary.json", "w", encoding="utf-8") as f:
         json.dump(json_safe({"summary": summary, "details": details}), f, ensure_ascii=False, indent=2)
-
-    draw_confusion_matrix(yolo_confusion, "YOLO-only Confusion Matrix", figures_out / "confusion_yolo_only.jpg")
-    draw_confusion_matrix(fusion_confusion, "YOLO+SAM Raw Confusion Matrix", figures_out / "confusion_yolo_sam_raw.jpg")
-    draw_confusion_matrix(vlm_raw_confusion, "Qwen-VLM Raw Confusion Matrix", figures_out / "confusion_vlm_raw.jpg")
-    draw_confusion_matrix(final_confusion, "YOLO+SAM+Qwen-VLM Final Confusion Matrix", figures_out / "confusion_yolo_sam_vlm_final.jpg")
-    draw_confusion_matrix(oracle_confusion, "Oracle Upper Bound Confusion Matrix", figures_out / "confusion_oracle_upper_bound.jpg")
-    draw_metrics_summary(summary, figures_out / "metrics_summary.jpg")
 
     print(f"report: {out_dir}")
     print(f"frontend outputs: {frontend_out}")
     print(f"report images: {report_images_out}")
     print(f"figures: {figures_out}")
+    print(f"confusion figures: {confusion_out}")
     print(json.dumps(json_safe(summary), ensure_ascii=False, indent=2))
 
 

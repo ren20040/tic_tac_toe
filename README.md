@@ -298,11 +298,21 @@ runs/yolo_sam_val_report/
 |   |-- 000009_compare_overlay.jpg
 |   `-- 000009_state_compare.jpg
 `-- figures/
-    |-- metrics_summary.jpg
-    |-- confusion_yolo_only.jpg
-    |-- confusion_yolo_sam_raw.jpg
-    |-- confusion_vlm_raw.jpg
-    `-- confusion_yolo_sam_vlm_final.jpg
+    |-- cell_accuracy_by_method.jpg
+    |-- board_accuracy_by_method.jpg
+    |-- occupied_accuracy_by_method.jpg
+    |-- grid_assignment_accuracy_by_method.jpg
+    |-- rule_safety_metrics.jpg
+    |-- mask_quality.jpg
+    |-- mask_count_distribution.jpg
+    |-- per_image_cell_accuracy_trend.jpg
+    |-- inference_time_per_image.jpg
+    |-- mask_fallback_rate_per_image.jpg
+    `-- confusion/
+        |-- confusion_yolo_only.jpg
+        |-- confusion_yolo_sam_raw.jpg
+        |-- confusion_vlm_raw.jpg
+        `-- confusion_yolo_sam_vlm_final.jpg
 ```
 
 Main paper metrics include:

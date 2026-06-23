@@ -83,7 +83,7 @@ vlm:
   # Set true when the model cache is complete and the machine should not query Hugging Face.
   local_files_only: false
   device_map: auto
-  max_new_tokens: 512
+  max_new_tokens: 128
   # Options: none, 8bit, 4bit. Use 4bit to reduce GPU memory for local experiments.
   quantization: 4bit
 
