@@ -67,6 +67,20 @@ def normalize_vlm_quantization(value: Any = "none") -> str:
     return quantization
 
 
+def resolve_vlm_model_source(model_id: str, model_path: Optional[str] = None) -> str:
+    """Resolve an optional local VLM path while preserving Hugging Face model IDs."""
+    candidate = str(model_path or "").strip()
+    if not candidate:
+        candidate = str(model_id).strip()
+    expanded = Path(candidate).expanduser()
+    if expanded.is_absolute():
+        return str(expanded)
+    project_candidate = resolve_project_path(candidate)
+    if project_candidate.exists():
+        return str(project_candidate)
+    return candidate
+
+
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
@@ -112,6 +126,11 @@ def parse_args() -> argparse.Namespace:
         help="Hugging Face model id or local path for Qwen2.5-VL.",
     )
     parser.add_argument(
+        "--vlm-model-path",
+        default="",
+        help="Local Qwen model/snapshot directory. Overrides --vlm-model when set.",
+    )
+    parser.add_argument(
         "--vlm-device-map",
         default="auto",
         help="device_map passed to transformers from_pretrained, usually 'auto'.",
@@ -127,6 +146,11 @@ def parse_args() -> argparse.Namespace:
         choices=sorted(VALID_VLM_QUANTIZATIONS),
         default="none",
         help="Optional Qwen VLM quantization mode.",
+    )
+    parser.add_argument(
+        "--vlm-local-files-only",
+        action="store_true",
+        help="Load Qwen VLM from local cache/path only and never query Hugging Face.",
     )
     parser.add_argument(
         "--use-vlm-board-state",
@@ -262,9 +286,11 @@ class QwenBoardStateVLM:
     def __init__(
         self,
         model_id: str = "Qwen/Qwen2.5-VL-7B-Instruct",
+        model_path: str = "",
         device_map: str = "auto",
         max_new_tokens: int = 512,
         quantization: str = "none",
+        local_files_only: bool = False,
     ):
         """Load Qwen2.5-VL with optional dependencies."""
         quantization = normalize_vlm_quantization(quantization)
@@ -278,13 +304,19 @@ class QwenBoardStateVLM:
             ) from exc
 
         self.model_id = model_id
+        self.model_source = resolve_vlm_model_source(model_id, model_path)
         self.max_new_tokens = int(max_new_tokens)
         self.quantization = quantization
         self.process_vision_info = process_vision_info
-        self.processor = AutoProcessor.from_pretrained(model_id)
+        self.local_files_only = bool(local_files_only)
+        self.processor = AutoProcessor.from_pretrained(
+            self.model_source,
+            local_files_only=self.local_files_only,
+        )
         model_kwargs = {
             "torch_dtype": "auto",
             "device_map": device_map,
+            "local_files_only": self.local_files_only,
         }
         if quantization != "none":
             try:
@@ -307,7 +339,7 @@ class QwenBoardStateVLM:
                     load_in_8bit=True,
                 )
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            model_id,
+            self.model_source,
             **model_kwargs,
         )
 
@@ -1310,12 +1342,15 @@ def main():
     save_masks = not args.no_save_masks
     vlm = None
     if args.enable_vlm:
-        print(f"[info] Loading VLM: {args.vlm_model}")
+        model_source = resolve_vlm_model_source(args.vlm_model, args.vlm_model_path)
+        print(f"[info] Loading VLM: {model_source}")
         vlm = QwenBoardStateVLM(
             model_id=args.vlm_model,
+            model_path=args.vlm_model_path,
             device_map=args.vlm_device_map,
             max_new_tokens=args.vlm_max_new_tokens,
             quantization=args.vlm_quant,
+            local_files_only=args.vlm_local_files_only,
         )
 
     if is_camera_source(args.source):

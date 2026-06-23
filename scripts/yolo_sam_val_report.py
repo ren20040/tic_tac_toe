@@ -40,6 +40,7 @@ from scripts.yolo_sam_perception_frontend import (
     box_area,
     json_safe,
     normalize_vlm_quantization,
+    resolve_vlm_model_source,
 )
 from utils.config_loader import load_config, resolve_project_path
 
@@ -55,9 +56,11 @@ STATE_COLORS = {
 DEFAULT_VLM_SETTINGS = {
     "enabled": True,
     "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+    "model_path": "",
     "device_map": "auto",
     "max_new_tokens": 512,
     "quantization": "none",
+    "local_files_only": False,
 }
 
 
@@ -87,6 +90,11 @@ def parse_args() -> argparse.Namespace:
         help="Hugging Face model id or local path for Qwen2.5-VL. Overrides config.vlm.model.",
     )
     parser.add_argument(
+        "--vlm-model-path",
+        default=None,
+        help="Local Qwen model/snapshot directory. Overrides config.vlm.model_path and config.vlm.model when set.",
+    )
+    parser.add_argument(
         "--vlm-device-map",
         default=None,
         help="device_map passed to transformers from_pretrained. Overrides config.vlm.device_map.",
@@ -102,6 +110,11 @@ def parse_args() -> argparse.Namespace:
         choices=["none", "8bit", "4bit"],
         default=None,
         help="Optional Qwen VLM quantization mode. Overrides config.vlm.quantization.",
+    )
+    parser.add_argument(
+        "--vlm-local-files-only",
+        action="store_true",
+        help="Load Qwen VLM from local cache/path only and never query Hugging Face.",
     )
     parser.add_argument(
         "--low-conf-threshold",
@@ -132,6 +145,11 @@ def load_vlm_settings(config_path: str, args: argparse.Namespace) -> Dict[str, A
 
     enabled = bool(config_vlm.get("enabled", True)) and not args.no_vlm
     model = args.vlm_model or config_vlm.get("model") or config_vlm.get("model_id") or DEFAULT_VLM_SETTINGS["model"]
+    model_path = (
+        args.vlm_model_path
+        if args.vlm_model_path is not None
+        else config_vlm.get("model_path", config_vlm.get("local_model_path", DEFAULT_VLM_SETTINGS["model_path"]))
+    )
     device_map = args.vlm_device_map or config_vlm.get("device_map") or DEFAULT_VLM_SETTINGS["device_map"]
     max_new_tokens = (
         args.vlm_max_new_tokens
@@ -143,13 +161,20 @@ def load_vlm_settings(config_path: str, args: argparse.Namespace) -> Dict[str, A
         if args.vlm_quant is not None
         else config_vlm.get("quantization", config_vlm.get("quant", DEFAULT_VLM_SETTINGS["quantization"]))
     )
+    local_files_only = bool(config_vlm.get("local_files_only", DEFAULT_VLM_SETTINGS["local_files_only"]))
+    if args.vlm_local_files_only:
+        local_files_only = True
+    model_source = resolve_vlm_model_source(str(model), str(model_path or ""))
 
     return {
         "enabled": enabled,
         "model": str(model),
+        "model_path": str(model_path or ""),
+        "model_source": model_source,
         "device_map": str(device_map),
         "max_new_tokens": int(max_new_tokens),
         "quantization": normalize_vlm_quantization(quantization),
+        "local_files_only": local_files_only,
     }
 
 
@@ -946,15 +971,18 @@ def main():
     if vlm_settings["enabled"]:
         print(
             "[info] Loading VLM: "
-            f"{vlm_settings['model']} "
+            f"{vlm_settings['model_source']} "
             f"(quantization={vlm_settings['quantization']}, "
-            f"max_new_tokens={vlm_settings['max_new_tokens']})"
+            f"max_new_tokens={vlm_settings['max_new_tokens']}, "
+            f"local_files_only={vlm_settings['local_files_only']})"
         )
         vlm = QwenBoardStateVLM(
             model_id=vlm_settings["model"],
+            model_path=vlm_settings["model_path"],
             device_map=vlm_settings["device_map"],
             max_new_tokens=vlm_settings["max_new_tokens"],
             quantization=vlm_settings["quantization"],
+            local_files_only=vlm_settings["local_files_only"],
         )
 
     rows: List[Dict[str, Any]] = []
@@ -1250,9 +1278,12 @@ def main():
         "total_masks": int(sum(int(row["total_mask_count"]) for row in rows)),
         "vlm_enabled": vlm is not None,
         "vlm_model": vlm_settings["model"],
+        "vlm_model_path": vlm_settings["model_path"],
+        "vlm_model_source": vlm_settings["model_source"],
         "vlm_device_map": vlm_settings["device_map"],
         "vlm_max_new_tokens": vlm_settings["max_new_tokens"],
         "vlm_quantization": vlm_settings["quantization"],
+        "vlm_local_files_only": vlm_settings["local_files_only"],
         "vlm_config": vlm_settings,
     }
     total_masks = int(summary["total_masks"])

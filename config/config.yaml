@@ -77,10 +77,15 @@ yolo_sam:
 vlm:
   enabled: true
   model: Qwen/Qwen2.5-VL-7B-Instruct
+  # Optional local snapshot/model directory. Non-empty value overrides "model".
+  # Example: /home/leju/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-7B-Instruct/snapshots/<hash>
+  model_path: ""
+  # Set true when the model cache is complete and the machine should not query Hugging Face.
+  local_files_only: false
   device_map: auto
   max_new_tokens: 512
   # Options: none, 8bit, 4bit. Use 4bit to reduce GPU memory for local experiments.
-  quantization: none
+  quantization: 4bit
 
 vision:
   show_window: true

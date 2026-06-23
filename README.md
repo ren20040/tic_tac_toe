@@ -126,6 +126,8 @@ VLM quantization can be controlled from config:
 vlm:
   enabled: true
   model: Qwen/Qwen2.5-VL-7B-Instruct
+  model_path: ""       # optional local snapshot/model directory
+  local_files_only: false
   device_map: auto
   max_new_tokens: 512
   quantization: none   # none, 8bit, or 4bit
@@ -225,6 +227,16 @@ python scripts/yolo_sam_perception_frontend.py \
   --vlm-max-new-tokens 128
 ```
 
+Use a local Qwen snapshot path and avoid network checks:
+
+```bash
+python scripts/yolo_sam_perception_frontend.py \
+  --source dataset/images/val/000009.jpg \
+  --enable-vlm \
+  --vlm-model-path ~/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-7B-Instruct/snapshots/<hash> \
+  --vlm-local-files-only
+```
+
 Outputs are written to:
 
 ```text
@@ -261,6 +273,14 @@ python scripts/yolo_sam_val_report.py --vlm-quant 8bit --out runs/yolo_sam_front
 python scripts/yolo_sam_val_report.py --vlm-quant 4bit --out runs/yolo_sam_frontend/val_report_4bit
 ```
 
+Run the validation report with a local Qwen snapshot:
+
+```bash
+python scripts/yolo_sam_val_report.py \
+  --vlm-model-path ~/.cache/huggingface/hub/models--Qwen--Qwen2.5-VL-7B-Instruct/snapshots/<hash> \
+  --vlm-local-files-only
+```
+
 The report saves:
 
 ```text
@@ -293,9 +313,12 @@ Main paper metrics include:
 "vlm_config": {
   "enabled": true,
   "model": "Qwen/Qwen2.5-VL-7B-Instruct",
+  "model_path": "",
+  "model_source": "Qwen/Qwen2.5-VL-7B-Instruct",
   "device_map": "auto",
   "max_new_tokens": 128,
-  "quantization": "4bit"
+  "quantization": "4bit",
+  "local_files_only": false
 }
 ```
 
