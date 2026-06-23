@@ -240,7 +240,7 @@ python scripts/yolo_sam_perception_frontend.py \
 Outputs are written to:
 
 ```text
-runs/yolo_sam_frontend/
+runs/yolo_sam_perception_frontend/
 ```
 
 Typical outputs include JSON, annotated image, per-piece masks, and a combined all-mask preview image.
@@ -268,9 +268,9 @@ python scripts/yolo_sam_val_report.py --max-images 5
 Compare quantization settings:
 
 ```bash
-python scripts/yolo_sam_val_report.py --vlm-quant none --out runs/yolo_sam_frontend/val_report_none
-python scripts/yolo_sam_val_report.py --vlm-quant 8bit --out runs/yolo_sam_frontend/val_report_8bit
-python scripts/yolo_sam_val_report.py --vlm-quant 4bit --out runs/yolo_sam_frontend/val_report_4bit
+python scripts/yolo_sam_val_report.py --vlm-quant none --out runs/yolo_sam_val_report_none
+python scripts/yolo_sam_val_report.py --vlm-quant 8bit --out runs/yolo_sam_val_report_8bit
+python scripts/yolo_sam_val_report.py --vlm-quant 4bit --out runs/yolo_sam_val_report_4bit
 ```
 
 Run the validation report with a local Qwen snapshot:
@@ -284,15 +284,25 @@ python scripts/yolo_sam_val_report.py \
 The report saves:
 
 ```text
-runs/yolo_sam_frontend/val_report/
-├── summary.json
-├── summary.csv
-├── metrics_summary.jpg
-├── confusion_yolo_only.jpg
-├── confusion_yolo_sam_raw.jpg
-├── confusion_vlm_raw.jpg
-├── confusion_yolo_sam_vlm_final.jpg
-└── images/
+runs/yolo_sam_val_report/
+|-- summary.json
+|-- summary.csv
+|-- frontend_outputs/
+|   `-- 000009/
+|       |-- 000009.json
+|       |-- 000009_annotated.jpg
+|       |-- 000009_all_masks.jpg
+|       `-- masks/
+|-- report_images/
+|   |-- 000009_gt_overlay.jpg
+|   |-- 000009_compare_overlay.jpg
+|   `-- 000009_state_compare.jpg
+`-- figures/
+    |-- metrics_summary.jpg
+    |-- confusion_yolo_only.jpg
+    |-- confusion_yolo_sam_raw.jpg
+    |-- confusion_vlm_raw.jpg
+    `-- confusion_yolo_sam_vlm_final.jpg
 ```
 
 Main paper metrics include:

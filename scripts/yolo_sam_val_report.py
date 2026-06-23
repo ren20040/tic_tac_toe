@@ -74,7 +74,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--labels", default="dataset/labels/val", help="Validation label directory.")
     parser.add_argument(
         "--out",
-        default="runs/yolo_sam_frontend/val_report",
+        default="runs/yolo_sam_val_report",
         help="Output directory for report artifacts.",
     )
     parser.add_argument("--max-images", type=int, default=0, help="0 means process all images.")
@@ -961,8 +961,12 @@ def main():
     image_dir = resolve_project_path(args.images)
     label_dir = resolve_project_path(args.labels)
     out_dir = resolve_project_path(args.out)
-    images_out = out_dir / "images"
-    images_out.mkdir(parents=True, exist_ok=True)
+    frontend_out = out_dir / "frontend_outputs"
+    report_images_out = out_dir / "report_images"
+    figures_out = out_dir / "figures"
+    frontend_out.mkdir(parents=True, exist_ok=True)
+    report_images_out.mkdir(parents=True, exist_ok=True)
+    figures_out.mkdir(parents=True, exist_ok=True)
     vlm_settings = load_vlm_settings(args.config, args)
 
     frontend = YoloSAMPerceptionFrontend(args.config)
@@ -1004,10 +1008,11 @@ def main():
         gt_state, gt_board, gt_pieces, gt_messages = labels_to_board_state(frontend, labels)
 
         inference_start = time.perf_counter()
+        frontend_image_out = frontend_out / image_path.stem
         result = frontend.process_image(
             frame=frame,
             image_name=image_path.name,
-            output_dir=images_out,
+            output_dir=frontend_image_out,
             save_masks=save_masks,
             vlm=vlm,
             use_vlm_board_state=vlm is not None,
@@ -1066,9 +1071,9 @@ def main():
         update_confusion(final_confusion, gt_state, final_state)
         update_confusion(oracle_confusion, gt_state, oracle_state)
 
-        gt_overlay_path = images_out / f"{image_path.stem}_gt_overlay.jpg"
-        compare_overlay_path = images_out / f"{image_path.stem}_compare_overlay.jpg"
-        state_compare_path = images_out / f"{image_path.stem}_state_compare.jpg"
+        gt_overlay_path = report_images_out / f"{image_path.stem}_gt_overlay.jpg"
+        compare_overlay_path = report_images_out / f"{image_path.stem}_compare_overlay.jpg"
+        state_compare_path = report_images_out / f"{image_path.stem}_state_compare.jpg"
         draw_gt_overlay(frontend, frame, gt_board, gt_pieces, gt_overlay_path)
         draw_compare_overlay(
             frontend,
@@ -1276,6 +1281,10 @@ def main():
         "total_sam_masks": int(sum(int(row["sam_mask_count"]) for row in rows)),
         "total_fallback_masks": int(sum(int(row["fallback_mask_count"]) for row in rows)),
         "total_masks": int(sum(int(row["total_mask_count"]) for row in rows)),
+        "output_dir": str(out_dir),
+        "frontend_outputs_dir": str(frontend_out),
+        "report_images_dir": str(report_images_out),
+        "figures_dir": str(figures_out),
         "vlm_enabled": vlm is not None,
         "vlm_model": vlm_settings["model"],
         "vlm_model_path": vlm_settings["model_path"],
@@ -1339,14 +1348,17 @@ def main():
     with open(out_dir / "summary.json", "w", encoding="utf-8") as f:
         json.dump(json_safe({"summary": summary, "details": details}), f, ensure_ascii=False, indent=2)
 
-    draw_confusion_matrix(yolo_confusion, "YOLO-only Confusion Matrix", out_dir / "confusion_yolo_only.jpg")
-    draw_confusion_matrix(fusion_confusion, "YOLO+SAM Raw Confusion Matrix", out_dir / "confusion_yolo_sam_raw.jpg")
-    draw_confusion_matrix(vlm_raw_confusion, "Qwen-VLM Raw Confusion Matrix", out_dir / "confusion_vlm_raw.jpg")
-    draw_confusion_matrix(final_confusion, "YOLO+SAM+Qwen-VLM Final Confusion Matrix", out_dir / "confusion_yolo_sam_vlm_final.jpg")
-    draw_confusion_matrix(oracle_confusion, "Oracle Upper Bound Confusion Matrix", out_dir / "confusion_oracle_upper_bound.jpg")
-    draw_metrics_summary(summary, out_dir / "metrics_summary.jpg")
+    draw_confusion_matrix(yolo_confusion, "YOLO-only Confusion Matrix", figures_out / "confusion_yolo_only.jpg")
+    draw_confusion_matrix(fusion_confusion, "YOLO+SAM Raw Confusion Matrix", figures_out / "confusion_yolo_sam_raw.jpg")
+    draw_confusion_matrix(vlm_raw_confusion, "Qwen-VLM Raw Confusion Matrix", figures_out / "confusion_vlm_raw.jpg")
+    draw_confusion_matrix(final_confusion, "YOLO+SAM+Qwen-VLM Final Confusion Matrix", figures_out / "confusion_yolo_sam_vlm_final.jpg")
+    draw_confusion_matrix(oracle_confusion, "Oracle Upper Bound Confusion Matrix", figures_out / "confusion_oracle_upper_bound.jpg")
+    draw_metrics_summary(summary, figures_out / "metrics_summary.jpg")
 
     print(f"report: {out_dir}")
+    print(f"frontend outputs: {frontend_out}")
+    print(f"report images: {report_images_out}")
+    print(f"figures: {figures_out}")
     print(json.dumps(json_safe(summary), ensure_ascii=False, indent=2))
 
 

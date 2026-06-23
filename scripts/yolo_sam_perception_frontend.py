@@ -94,7 +94,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--config", default="config/config.yaml", help="Config path.")
     parser.add_argument(
         "--out",
-        default="runs/yolo_sam_frontend",
+        default="runs/yolo_sam_perception_frontend",
         help="Output directory for JSON, masks, and annotated images.",
     )
     parser.add_argument(
