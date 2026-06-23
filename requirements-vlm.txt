@@ -1,0 +1,6 @@
+-r requirements-win.txt
+transformers>=4.49.0,<5.0.0
+accelerate
+qwen-vl-utils
+decorator
+bitsandbytes>=0.43.3

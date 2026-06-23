@@ -1,0 +1,6 @@
+pyyaml
+opencv-python
+numpy
+ultralytics
+rospy
+cv_bridge

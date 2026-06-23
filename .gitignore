@@ -1,0 +1,70 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+*.egg-info/
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+
+# Local backups
+*.bak
+*.bak_*
+*.backup
+
+# Local datasets and annotations
+dataset/
+datasets/
+data/images/
+data/labels/
+
+# Training, validation, and runtime outputs
+runs/
+outputs/
+logs/
+wandb/
+tensorboard/
+
+# Model weights and checkpoints
+*.pt
+*.pth
+*.onnx
+*.engine
+*.safetensors
+*.ckpt
+*.bin
+
+# Large generated media/artifacts
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.bag
+*.db3
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.webp
+
+# Paper drafts and generated documents
+paper_perception_draft*.md
+*.docx
+*.pdf
+
+# Local secrets or temporary scripts
+.env
+.env.*
+test_aiapi.ps1

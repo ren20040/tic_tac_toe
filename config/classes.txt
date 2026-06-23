@@ -1,0 +1,3 @@
+board
+yellow_piece
+blue_piece

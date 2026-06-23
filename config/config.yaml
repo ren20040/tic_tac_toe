@@ -1,0 +1,212 @@
+# =========================
+# Camera
+# =========================
+camera:
+  topic: /camera/color/image_raw
+
+# =========================
+# YOLO Detection
+# =========================
+yolo:
+  model_path: runs/detect/runs/tic_tac_toe_yolo/weights/best.pt
+  conf: 0.25
+  device: 0
+  class_names:
+    0: board
+    1: yellow_piece
+    2: blue_piece
+
+# =========================
+# Segment Anything Detection
+# =========================
+sam:
+  model_type: fastsam
+  model_path: FastSAM-s.pt
+  conf: 0.25
+  iou: 0.7
+  imgsz: 640
+  device: 0
+  show_window: true
+  window_name: tic_tac_toe_sam_vision
+  # Pixel box [x1, y1, x2, y2] or normalized [0~1] box. null uses the full image.
+  board_box: null
+  mask_threshold: 0.5
+  min_piece_area_ratio: 0.02
+  max_piece_area_ratio: 0.75
+  min_color_ratio: 0.18
+  yellow_hsv_lower: [15, 45, 50]
+  yellow_hsv_upper: [40, 255, 255]
+  blue_hsv_lower: [90, 45, 40]
+  blue_hsv_upper: [135, 255, 255]
+
+# =========================
+# YOLO + Segment Anything Fusion
+# =========================
+yolo_sam:
+  sam_model_type: fastsam
+  sam_model_path: FastSAM-s.pt
+  sam_conf: 0.25
+  sam_iou: 0.7
+  sam_imgsz: 640
+  sam_device: 0
+  sam_retina_masks: true
+  show_window: true
+  window_name: tic_tac_toe_yolo_sam_vision
+  # Used only if YOLO does not detect the board. null means fail safely.
+  board_box: null
+  mask_threshold: 0.5
+  mask_match_min_box_coverage: 0.08
+  mask_match_min_mask_fraction: 0.20
+  piece_box_expand_ratio: 0.15
+  min_piece_area_ratio: 0.02
+  max_piece_area_ratio: 0.75
+  fallback_to_yolo_center: true
+  fallback_score_scale: 0.65
+  color_check_enabled: true
+  reject_color_mismatch: false
+  min_color_ratio: 0.18
+  refine_board_box_with_sam: false
+  yellow_hsv_lower: [15, 45, 50]
+  yellow_hsv_upper: [40, 255, 255]
+  blue_hsv_lower: [90, 45, 40]
+  blue_hsv_upper: [135, 255, 255]
+
+# =========================
+# VLM Arbitration / Experiment
+# =========================
+vlm:
+  enabled: true
+  model: Qwen/Qwen2.5-VL-7B-Instruct
+  device_map: auto
+  max_new_tokens: 512
+  # Options: none, 8bit, 4bit. Use 4bit to reduce GPU memory for local experiments.
+  quantization: none
+
+vision:
+  show_window: true
+  window_name: tic_tac_toe_vision
+  min_board_conf: 0.25
+  min_piece_conf: 0.25
+  row_ratios: [1.0, 1.5, 2.0]
+  trapezoid_top_width_ratio: 0.6666666667
+
+# =========================
+# Game Rule
+# =========================
+game:
+  my_piece: yellow_piece
+  yellow_value: 1
+  blue_value: 2
+  empty_value: 0
+  robot_starts: true
+  main_loop_hz: 2.0
+  stable_frames: 3
+  stable_timeout: 10.0
+  verify_after_move_timeout: 8.0
+  stop_on_draw: true
+  set_arm_mode_on_winner: true
+  set_arm_mode_on_draw: false
+  game_over_arm_mode: 1
+  prefer_center: true
+  prefer_corners: true
+
+# =========================
+# Dataset Collection
+# =========================
+data:
+  collect_path: dataset/images/train
+  auto_save: false
+  save_interval: 2.0
+  image_change_threshold: 15
+  show_window: true
+
+# =========================
+# ROS Topics
+# =========================
+ros:
+  board_state_topic: /tic_tac_toe/board_state
+  next_move_topic: /tic_tac_toe/next_move
+
+# =========================
+# Arm Topics / Services
+# =========================
+arm:
+  mode_service: /arm_traj_change_mode
+  target_topic: /kuavo_arm_target_poses
+  dry_run: false
+
+# =========================
+# Joint-Keyframe Pick / Place
+# =========================
+arm_pick_place:
+  arm_joint_count: 8
+  single_arm_joint_count: 4
+  right_arm_name: right
+  board_cols: 3
+
+  hand_topic: /control_robot_hand_position
+  waist_topic: /robot_waist_motion_data
+  head_topic: /robot_head_motion_data
+
+  set_mode_on_init: true
+  control_mode: 2
+  move_head_on_init: true
+  head_target_on_init: [0.0, 25.0]
+  head_require_subscribers: false
+  head_publisher_warmup_time: 0.5
+  move_to_ready_on_init: true
+  open_hand_on_init: true
+  finish_pose_enabled: true
+
+  target_frame: 0
+  require_subscribers: true
+  publisher_warmup_time: 0.5
+  connect_timeout: 10.0
+  motion_settle_time: 1.0
+  hand_settle_time: 0.5
+  waist_settle_time: 0.5
+
+  startup_step_duration: 2.0
+  move_duration: 2.0
+  put_duration: 2.0
+  return_step_duration: 2.0
+  finish_step_duration: 2.0
+
+  right_hand_open_position: [0, 0, 0, 0, 0, 0]
+  right_hand_close_position: [80, 20, 80, 80, 80, 80]
+
+  joint_keyframes:
+    pos1: [22.6, 10.0, 0.0, -54.4, 22.6, -10.0, 0.0, -54.4]
+    pos2a: [22.6, 10.0, 0.0, -54.4, 0.0, -60.0, 0.0, 0.0]
+    pos2b: [22.6, 10.0, 0.0, -54.4, 0.0, -60.0, 0.0, -60.0]
+    pos3: [22.6, 10.0, 0.0, -54.4, -20.0, -10.0, -15.0, -60.0]
+    pos4: [22.6, 10.0, 0.0, -54.4, 0.0, -60.0, -15.0, -60.0]
+
+  put_piece_targets:
+    0:
+      waist_deg: 90.0
+      arm_joint_deg: [22.6, 10.0, 0.0, -54.4, 0.0, -60.0, -15.0, -60.0]
+    1:
+      waist_deg: 75.0
+      arm_joint_deg: [22.6, 10.0, 0.0, -54.4, 0.0, -60.0, -15.0, -60.0]
+    2:
+      waist_deg: 65.0
+      arm_joint_deg: [22.6, 10.0, 0.0, -54.4, 0.0, -60.0, -15.0, -60.0]
+    3:
+      waist_deg: 85.0
+      arm_joint_deg: [22.6, 10.0, 0.0, -54.4, 0.0, -60.0, 0.0, -90.0]
+    4:
+      waist_deg: 70.0
+      arm_joint_deg: [22.6, 10.0, 0.0, -54.4, 0.0, -60.0, 0.0, -100.0]
+    5:
+      waist_deg: 50.0
+      arm_joint_deg: [22.6, 10.0, 0.0, -54.4, 0.0, -60.0, 0.0, -100.0]
+    6:
+      waist_deg: 90.0
+      arm_joint_deg: [22.6, 10.0, 0.0, -54.4, 0.0, -60.0, 0.0, -120.0]
+    7:
+      waist_deg: 70.0
+      arm_joint_deg: [22.6, 10.0, 0.0, -54.4, 0.0, -60.0, 15.0, -120.0]
+    8:
+      waist_deg: 60.0
+      arm_joint_deg: [22.6, 10.0, 0.0, -54.4, 0.0, -60.0, 20.0, -120.0]
