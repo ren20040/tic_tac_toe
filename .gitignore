@@ -61,8 +61,8 @@ tensorboard/
 
 # Paper drafts and generated documents
 paper_perception_draft*.md
-*.docx
-*.pdf
+# *.docx
+# *.pdf
 
 # Local secrets or temporary scripts
 .env
