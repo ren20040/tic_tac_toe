@@ -25,9 +25,9 @@ if str(PROJECT_ROOT) not in sys.path:
 import rospy
 from std_msgs.msg import String
 
-from scripts.tictactoe_engine import BoardState, TicTacToeEngine
-from scripts.tictactoe_pick_place import TicTacToePickPlace, get_pick_place
-from scripts.vision_state import TicTacToeVisionState
+from utils.tictactoe_engine import BoardState, TicTacToeEngine
+from utils.tictactoe_pick_place import TicTacToePickPlace, get_pick_place
+from utils.vision_state import TicTacToeVisionState
 from utils.config_loader import load_config
 
 

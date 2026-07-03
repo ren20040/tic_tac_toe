@@ -32,7 +32,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.tictactoe_engine import BoardState, TicTacToeEngine
+from utils.tictactoe_engine import BoardState, TicTacToeEngine
 from utils.config_loader import resolve_project_path
 
 
@@ -317,7 +317,7 @@ def init_pick_place(config_path: str):
     """Initialize ROS and return the existing pick/place backend."""
     import rospy
 
-    from scripts.tictactoe_pick_place import get_pick_place
+    from utils.tictactoe_pick_place import get_pick_place
 
     if not rospy.core.is_initialized():
         rospy.init_node("tic_tac_toe_execution_experiment", anonymous=True)
